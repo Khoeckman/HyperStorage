@@ -4,10 +4,9 @@ A lightweight wrapper for Storage interfaces (e.g., `localStorage` or `sessionSt
 
 The biggest burdens of working with the **Storage API** is verifying values on every read, providing proper default values and only being able to store strings, having to `JSON.stringify()` and `JSON.parse()` manually everytime. This package eliminates all of this by providing a safe and automatic wrapper that handles everything at once. You can read/store numbers and objects without any extra steps and lose no performance.
 
-[![npm version](https://img.shields.io/npm/v/@khoeckman/hyperstorage.svg)](https://www.npmjs.com/package/@khoeckman/hyperstorage)
-[![npm downloads](https://img.shields.io/npm/dt/@khoeckman/hyperstorage.svg)](https://www.npmjs.com/package/@khoeckman/hyperstorage)
-[![jsDelivr](https://data.jsdelivr.com/v1/package/npm/@khoeckman/hyperstorage/badge)](https://www.jsdelivr.com/package/npm/@khoeckman/hyperstorage)
-[![License](https://img.shields.io/npm/l/@khoeckman/hyperstorage.svg)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/hyperstorage-js.svg)](https://www.npmjs.com/package/hyperstorage-js)
+[![npm downloads](https://img.shields.io/npm/dt/hyperstorage-js.svg)](https://www.npmjs.com/package/hyperstorage-js)
+[![jsDelivr](https://data.jsdelivr.com/v1/package/npm/hyperstorage-js/badge)](https://www.jsdelivr.com/package/npm/hyperstorage-js)
 
 ---
 
