@@ -1,6 +1,6 @@
 # HyperStorage: Storage Manager for JavaScript/TypeScript
 
-A lightweight wrapper for Storage interfaces (e.g., `localStorage` or `sessionStorage`) with **efficient caching** and **type-preserving serialization**. Perfect for easy, fast and type-safe client-side data management.
+A lightweight wrapper for Storage interfaces (e.g., `localStorage` or `sessionStorage`) with **efficient caching** and **type-preserving serialization**.
 
 The biggest burdens of working with the **Storage API** is verifying values on every read, providing proper default values and only being able to store strings, having to `JSON.stringify()` and `JSON.parse()` manually everytime. This package eliminates all of this by providing a safe and automatic wrapper that handles everything at once. You can read/store numbers and objects without any extra steps and lose no performance.
 
