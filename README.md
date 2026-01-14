@@ -157,14 +157,26 @@ interface Settings {
 }
 
 const defaultValue: Settings = { theme: 'dark', language: 'en' }
-const userStore = new HyperStorage<Settings>('userSettings', { defaultValue })
+const userStore = new HyperStorage<Settings>('userSettings', defaultValue)
 
 // Property 'language' is missing in type '{ theme: "light"; }' but required in type 'Settings'. ts(2741)
 userStore.value = { theme: 'light' }
+```
 
-const current = userStore.sync() // (method): Settings | undefined
-// 'current' is possibly 'undefined'. ts(18048)
+### Using `sync()`
+
+Safe usage of `sync()` requires explicit runtime validation before accessing any properties. It quickly becomes clear how type-unsafe `sync()` is and why it should be avoided.
+
+```ts
+const current = userStore.sync() // (method): unknown
+
+// 'current' is of type 'unknown'. ts(18046)
 console.log(current.theme) // { theme: 'light' }
+
+// Must narrow down
+if (current && typeof current === 'object' && 'theme' in current) {
+  console.log(current.theme)
+}
 ```
 
 <br>
