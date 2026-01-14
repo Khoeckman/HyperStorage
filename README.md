@@ -8,7 +8,7 @@ The biggest burdens of working with the **Storage API** is verifying values on e
 [![npm downloads](https://img.shields.io/npm/dt/hyperstorage-js.svg)](https://www.npmjs.com/package/hyperstorage-js)
 [![jsDelivr](https://data.jsdelivr.com/v1/package/npm/hyperstorage-js/badge)](https://www.jsdelivr.com/package/npm/hyperstorage-js)
 
----
+<br>
 
 ## Features
 
@@ -18,7 +18,7 @@ The biggest burdens of working with the **Storage API** is verifying values on e
 - 🔒 **Optional encoding/decoding** hooks to obfuscate data.
 - 🌐 **Custom storage**: works with any object implementing the standard Storage API. (`localStorage`, `sessionStorage`, ...)
 
----
+<br>
 
 ## Installation
 
@@ -33,7 +33,7 @@ pnpm add hyperstorage-js
 yarn add hyperstorage-js
 ```
 
----
+<br>
 
 ## Constructor Syntax
 
@@ -51,7 +51,7 @@ class StorageManager<T> {
 }
 ```
 
----
+<br>
 
 ## Usage
 
@@ -130,7 +130,8 @@ console.log(sessionStore.storage) // Storage {sessionData: 'hN0IEUdoqmJ/', leng
 
 ```js
 sessionStore.reset()
-console.log(sessionStore.value) // 'none' (= this.defaultValue)
+console.log(sessionStore.defaultValue) // 'none'
+console.log(sessionStore.value) // 'none'
 ```
 
 ### Removing Values
@@ -143,7 +144,7 @@ console.log(sessionStore.value) // undefined
 console.log(sessionStore.storage) // Storage {length: 0}
 ```
 
----
+<br>
 
 ## TypeScript Usage
 
@@ -166,7 +167,7 @@ const current = userStore.sync() // (method): Settings | undefined
 console.log(current.theme) // { theme: 'light' }
 ```
 
----
+<br>
 
 ## API
 
@@ -241,13 +242,13 @@ console.log(userStore.value) // { theme: 'blue' }
 console.log(userStore.storage) // Storage {userSettings: '\x00{"theme":"blue"}', length: 1}
 ```
 
----
+<br>
 
 ## Source
 
 [GitHub Repository](https://github.com/Khoeckman/HyperStorage)
 
----
+<br>
 
 ## License
 
