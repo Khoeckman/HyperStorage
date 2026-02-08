@@ -95,7 +95,7 @@ class HyperStorage<T> {
         (isNaN(value) || value === Infinity || value === -Infinity))
     ) {
       // Manually stringify non-JSON values
-      stringValue = String(value)
+      stringValue = '\0' + String(value)
     } else {
       stringValue = '\0' + JSON.stringify(value)
     }
