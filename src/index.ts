@@ -34,7 +34,7 @@ class HyperStorage<T> {
    * Creates a new HyperStorage instance.
    *
    * @param {string} itemName - The key name under which the data will be stored.
-   * @param {T} [defaultValue] - Default value if the key does not exist.
+   * @param {T} [defaultValue] - Default value assigned to the key if it does not exist yet.
    * @param {Object} [options={}] - Optional configuration parameters.
    * @param {(value: string) => string} [options.encodeFn] - Optional function to encode stored values.
    * @param {(value: string) => string} [options.decodeFn] - Optional function to decode stored values.
@@ -55,17 +55,21 @@ class HyperStorage<T> {
   ) {
     const { encodeFn, decodeFn, storage = window.localStorage } = options
 
-    if (typeof itemName !== 'string') throw new TypeError('itemName is not a string')
+    if (typeof itemName !== 'string')
+      throw new TypeError('itemName is not a string')
     this.itemName = itemName
     this.defaultValue = defaultValue
 
-    if (encodeFn && typeof encodeFn !== 'function') throw new TypeError('encodeFn is defined but is not a function')
+    if (encodeFn && typeof encodeFn !== 'function')
+      throw new TypeError('encodeFn is defined but is not a function')
     this.encodeFn = encodeFn || ((v) => v)
 
-    if (decodeFn && typeof decodeFn !== 'function') throw new TypeError('decodeFn is defined but is not a function')
+    if (decodeFn && typeof decodeFn !== 'function')
+      throw new TypeError('decodeFn is defined but is not a function')
     this.decodeFn = decodeFn || ((v) => v)
 
-    if (!(storage instanceof Storage)) throw new TypeError('storage must be an instance of Storage')
+    if (!(storage instanceof Storage))
+      throw new TypeError('storage must be an instance of Storage')
     this.storage = storage
 
     this.sync()
@@ -87,11 +91,15 @@ class HyperStorage<T> {
       else stringValue = value
     } else if (
       value === undefined ||
-      (typeof value === 'number' && (isNaN(value) || value === Infinity || value === -Infinity))
-    )
+      (typeof value === 'number' &&
+        (isNaN(value) || value === Infinity || value === -Infinity))
+    ) {
       // Manually stringify non-JSON values
       stringValue = String(value)
-    else stringValue = '\0' + JSON.stringify(value)
+    } else {
+      stringValue = '\0' + JSON.stringify(value)
+    }
+
     this.storage.setItem(this.itemName, this.encodeFn(stringValue))
   }
 

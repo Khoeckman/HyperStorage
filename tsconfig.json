@@ -1,16 +1,30 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext", "DOM"],
-    "target": "esnext",
+    "rootDir": "./src",
+
+    "target": "ESNext",
+    "useDefineForClassFields": true,
     "module": "ESNext",
-    "outDir": "./dist/",
-    "strict": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "declaration": true,
+    "declarationDir": "./dist",
+    "outDir": "./dist",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "checkJs": true,
-    "allowJs": true,
-    "declaration": true
-  },
-  "files": ["./src/index.ts"]
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true
+  }
 }

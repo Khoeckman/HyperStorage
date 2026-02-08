@@ -2,7 +2,7 @@
 
 A lightweight wrapper for Storage interfaces (e.g., `localStorage` or `sessionStorage`) with **efficient caching** and **type-preserving serialization**.
 
-The biggest burdens of working with the **Storage API** is verifying values on every read, providing proper default values and only being able to store strings, having to `JSON.stringify()` and `JSON.parse()` manually everytime. This package eliminates all of this by providing a safe and automatic wrapper that handles everything at once. You can read/store numbers and objects without any extra steps and lose no performance.
+The biggest burdens of working with the **Storage API** is verifying values on every read, providing proper default values and only being able to store strings, having to `JSON.stringify()` and `JSON.parse()` manually everytime. This package eliminates this all by providing a safe, automatic and efficient wrapper that handles everything for you. You can read/store numbers and objects without any extra steps, lose no performance and improve code readability.
 
 [![npm version](https://img.shields.io/npm/v/hyperstorage-js.svg)](https://www.npmjs.com/package/hyperstorage-js)
 [![npm downloads](https://img.shields.io/npm/dt/hyperstorage-js.svg)](https://www.npmjs.com/package/hyperstorage-js)
@@ -13,7 +13,8 @@ The biggest burdens of working with the **Storage API** is verifying values on e
 ## Features
 
 - 📝 **Default values**: are automatically set when the key is not in Storage.
-- 🧩 **JSON support**: automatically serializes and parses objects or non-string primitives (`undefined`, `NaN`, `Infinity`) which the Storage API does not support by default.
+- 🧩 **JSON support**: automatically serializes and parses objects or non-string primitives (numbers, `undefined`, `NaN`, etc.) which the Storage API does not support by default.
+- 🛠️ **Utility helpers**: built-in helper methods (like `.set()` and `.isDefault()`) to simplify storage operations.
 - ⚡ **Fast caching**: memory cache avoids repeated JSON convertions.
 - 🔒 **Optional encoding/decoding** hooks to obfuscate data.
 - 🌐 **Custom storage**: works with any object implementing the standard Storage API. (`localStorage`, `sessionStorage`, ...)
@@ -60,39 +61,38 @@ import HyperStorage from 'hyperstorage-js'
 ```
 
 ```js
-const defaultValue = { theme: 'dark', language: 'en' }
+const defaultValue = { theme: 'light', language: 'en' }
 const userStore = new HyperStorage('userSettings', defaultValue)
 
 // If 'userSettings' is not present in the Storage, the defaultValue is set:
+console.log(userStore.value) // { theme: 'light', language: 'en' }
+
+// Change theme to dark:
+userStore.value = { theme: 'dark', language: 'en' }
+// or
+userStore.set((v) => (v.theme = 'dark'))
+
 console.log(userStore.value) // { theme: 'dark', language: 'en' }
-
-// Change theme to light:
-userStore.value = { theme: 'light', language: 'en' }
-
-console.log(userStore.value) // { theme: 'light' }
-console.log(userStore.value.theme) // 'light'
+console.log(userStore.value.theme) // 'dark'
 
 // Present in localStorage:
-console.log(userStore.storage) // Storage {userSettings: '\x00{"theme":"light"}', length: 1}
+console.log(userStore.storage) // Storage {userSettings: '\x00{"theme":"dark","language":"en"}', length: 1}
 ```
 
 ### Different Ways to Assign a New Value
 
 ```js
-// Overwrite all
-userStore.value = { theme: 'light', language: 'en' }
+// Using setter
+userStore.value = { theme: 'dark', language: 'en' }
 
-// Overwrite specific
-userStore.value = { ...userStore.value, theme: 'light' }
+// Change single property using the setter
+userStore.value = { ...userStore.value, theme: 'dark' }
 
-// Overwrite all using callback
-userStore.set((v) => (v = { theme: 'light', language: 'en' }))
+// Change single property using a callback
+userStore.set((v) => (v.theme = 'dark'))
 
-// Overwrite specific using callback
-userStore.set((v) => (v.theme = 'light'))
-
-// Overwrite and store result
-const result = userStore.set((v) => (v.theme = 'light'))
+// Change single property using a property setter
+userStore.set('theme', 'dark')
 ```
 
 ### Using Another Storage API
@@ -152,15 +152,15 @@ console.log(sessionStore.storage) // Storage {length: 0}
 
 ```ts
 interface Settings {
-  theme: 'dark' | 'light'
+  theme: 'system' | 'light' | 'dark'
   language: string
 }
 
-const defaultValue: Settings = { theme: 'dark', language: 'en' }
+const defaultValue: Settings = { theme: 'system', language: 'en' }
 const userStore = new HyperStorage<Settings>('userSettings', defaultValue)
 
-// Property 'language' is missing in type '{ theme: "light"; }' but required in type 'Settings'. ts(2741)
-userStore.value = { theme: 'light' }
+// Property 'language' is missing in type '{ theme: "dark"; }' but required in type 'Settings'. ts(2741)
+userStore.value = { theme: 'dark' }
 ```
 
 ### Using `sync()`
@@ -171,7 +171,7 @@ Safe usage of `sync()` requires explicit runtime validation before accessing any
 const current = userStore.sync() // (method): unknown
 
 // 'current' is of type 'unknown'. ts(18046)
-console.log(current.theme) // { theme: 'light' }
+console.log(current.theme) // { theme: 'dark' }
 
 // Must narrow down
 if (current && typeof current === 'object' && 'theme' in current) {
@@ -245,13 +245,13 @@ If the underlying `Storage` is not modified through the value setter, the intern
 
 ```js
 // External change to storage (to be avoided)
-localStorage.setItem('userSettings', '{"theme":"blue"}')
+localStorage.setItem('userSettings', '{"theme":"dark"}')
 
 // Resynchronize the cache, optionally with a custom decoder
 userStore.sync((value) => JSON.parse(value))
 
-console.log(userStore.value) // { theme: 'blue' }
-console.log(userStore.storage) // Storage {userSettings: '\x00{"theme":"blue"}', length: 1}
+console.log(userStore.value) // { theme: 'dark' }
+console.log(userStore.storage) // Storage {userSettings: '\x00{"theme":"dark"}', length: 1}
 ```
 
 <br>
