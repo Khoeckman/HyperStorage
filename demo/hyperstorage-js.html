@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="description" content="" />
+
+    <!-- Browser Tab -->
+    <title>HyperStorage</title>
+    <link rel="icon" href="./img/favicon.webp">
+
+    <!-- Google Fonts: Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- JS -->
+    <script src="./index.js" type="module"></script>
+
+    <style>
+        :root {
+            --white: #fff;
+            --black: #000;
+            --fg: var(--black);
+            --bg: var(--white);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --fg: var(--white);
+                --bg: var(--black);
+            }
+        }
+
+        html {
+            background: var(--bg);
+            font-family: system-ui, sans-serif;
+            color: var(--fg);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        #number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        #increment {
+            padding: 0.5rem 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>HyperStorage</h1>
+    <span id="number">0</span>
+    <button id="increment">Increment</button>
+
+    <script>
+        import HyperStorage from '../dist/index.mjs'
+
+        const numberEl = document.getElementById('number')
+        const buttonEl = document.getElementById('increment')
+
+        const demoStore = new HyperStorage('hyperstorage-js-demo', 0)
+
+        // Load the number from storage and display it
+        let number = demoStore.value
+        numberEl.textContent = '' + number
+
+        // Increment the number and save it to storage when the button is clicked
+        buttonEl.addEventListener('click', () => {
+            demoStore.set((v) => ++v)
+            numberEl.textContent = '' + demoStore.value
+        })
+    </script>
+</body>
+
+</html>
