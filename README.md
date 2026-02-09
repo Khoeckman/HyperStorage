@@ -13,11 +13,31 @@ The biggest burdens of working with the **Storage API** is verifying values on e
 ## Features
 
 - 📝 **Default values**: are automatically set when the key is not in Storage.
-- 🧩 **JSON support**: automatically serializes and parses objects or non-string primitives (numbers, `undefined`, `NaN`, etc.) which the Storage API does not support by default.
-- 🛠️ **Utility helpers**: built-in helper methods (like `.set()` and `.isDefault()`) to simplify storage operations.
+- 🧩 **(Super)JSON support**: automatically serializes and parses everything using [superjson](https://github.com/flightcontrolhq/superjson).
+- 🧠 **TypeScript support**: full type safety with strongly typed keys, values, and callbacks.
+- 🔒 **Optional encoding/decoding**: hooks to obfuscate data or change the serializer.
 - ⚡ **Fast caching**: memory cache avoids repeated JSON convertions.
-- 🔒 **Optional encoding/decoding** hooks to obfuscate data.
+- 🛠️ **Utility helpers**: use `.set()` and `.isDefault()` to simplify storage operations.
 - 🌐 **Custom storage**: works with any object implementing the standard Storage API. (`localStorage`, `sessionStorage`, ...)
+
+### Supported Types
+
+| Type      | Supported by Storage API | Supported by HyperStorage (trough superjson) |
+| --------- | ------------------------ | -------------------------------------------- |
+| string    | ✅                       | ✅                                           |
+| number    | ❌                       | ✅                                           |
+| boolean   | ❌                       | ✅                                           |
+| null      | ❌                       | ✅                                           |
+| Array     | ❌                       | ✅                                           |
+| Object    | ❌                       | ✅                                           |
+| undefined | ❌                       | ✅                                           |
+| bigint    | ❌                       | ✅                                           |
+| Date      | ❌                       | ✅                                           |
+| RegExp    | ❌                       | ✅                                           |
+| Set       | ❌                       | ✅                                           |
+| Map       | ❌                       | ✅                                           |
+| Error     | ❌                       | ✅                                           |
+| URL       | ❌                       | ✅                                           |
 
 <br>
 
@@ -44,8 +64,8 @@ class HyperStorage<T> {
     itemName: string,
     defaultValue: T,
     options: {
-      encodeFn?: (value: string) => string
-      decodeFn?: (value: string) => string
+      encodeFn?: (value: T) => string
+      decodeFn?: (value: string) => T
       storage?: Storage
     } = {}
   )
@@ -70,16 +90,16 @@ console.log(userStore.value) // { theme: 'light', language: 'en' }
 // Change theme to dark
 userStore.value = { theme: 'dark', language: 'en' }
 // or
-userStore.set((v) => (v.theme = 'dark'))
+userStore.set('theme', 'dark')
 
 console.log(userStore.value) // { theme: 'dark', language: 'en' }
 console.log(userStore.value.theme) // 'dark'
 
 // Present in localStorage
-console.log(userStore.storage) // Storage {userSettings: '\x00{"theme":"dark","language":"en"}', length: 1}
+console.log(userStore.storage) // Storage {userSettings: '{"json":{"theme":"dark","language":"en"}}', length: 1}
 ```
 
-### Different Ways to Assign a New Value
+### Advanced Ways to Assign a New Value
 
 ```js
 // Using setter
@@ -106,12 +126,12 @@ const sessionStore = new HyperStorage('sessionData', 'none', {
 
 sessionStore.value = 'temporary'
 console.log(sessionStore.value) // 'temporary'
-console.log(sessionStore.storage) // Storage {sessionData: 'temporary', length: 1}
+console.log(sessionStore.storage) // Storage {sessionData: '{"json":"temporary"}', length: 1}
 ```
 
 ### Using Encoding and Decoding Functions
 
-If you want to make stored data significantly harder to reverse-engineer, you should use the `encodeFn` and `decodeFn` options.
+If you want to make stored data significantly harder to reverse-engineer, use the `encodeFn` and `decodeFn` options.
 
 Apply Base64 encoding using JavaScript's `btoa` (String to Base64) and `atob` (Base64 to String).
 
@@ -123,7 +143,14 @@ const sessionStore = new HyperStorage('sessionData', 'none', {
 
 sessionStore.value = 'temporary'
 console.log(sessionStore.value) // 'temporary'
-console.log(sessionStore.storage) // Storage {sessionData: 'hN0IEUdoqmJ/', length: 1}
+console.log(sessionStore.storage) // Storage  {sessionData: 'dGVtcG9yYXJ5', length: 1}
+```
+
+The default values for `encodeFn` and `decodeFn` are:
+
+```ts
+encodeFn = (value) => HyperStorage.superjson.stringify(value)
+decodeFn = (value) => HyperStorage.superjson.parse<T>(value)
 ```
 
 ### Resetting Values
@@ -140,7 +167,7 @@ Internally uses `Storage.removeItem()` to remove the item from storage and sets 
 
 ```js
 sessionStore.remove()
-console.log(sessionStore.value) // undefined
+console.log(sessionStore.value) // 'none'
 console.log(sessionStore.storage) // Storage {length: 0}
 ```
 
@@ -168,6 +195,8 @@ userStore.value = { theme: 'dark' }
 Safe usage of `sync()` requires explicit runtime validation before accessing any properties. It quickly becomes clear how type-unsafe `sync()` is and why it should be avoided.
 
 ```ts
+// ... continues from the above example
+
 const result = userStore.sync() // (method): unknown
 // Right now, 'result' equals 'userStore.value' exactly
 
@@ -202,11 +231,11 @@ if (result && typeof result === 'object' && 'theme' in result) {
 - **Getter** — returns the cached value (very fast, does not use `JSON.parse`).
 - **Setter** — sets and caches the value, serializing and encoding it into `Storage`.
 
-### `set(callback: (value: T) => T): T`
+### `set(keyOrCallback: (keyof T) | ((value: T) => T), value?: T[keyof T]): T`
 
-- Updates the stored value using a callback function.
-- The callback receives the current value and must return the new value.
-- Returns the newly stored value.
+- If a **callback** is provided, it receives the current value and must return the new value.
+- If a **key and value** are provided, it updates that single property on the stored object.
+- Returns the updated stored value.
 
 ### `reset(): T`
 
@@ -256,7 +285,7 @@ localStorage.setItem('userSettings', '{"theme":"dark"}')
 userStore.sync((value) => JSON.parse(value))
 
 console.log(userStore.value) // { theme: 'dark' }
-console.log(userStore.storage) // Storage {userSettings: '\x00{"theme":"dark"}', length: 1}
+console.log(userStore.storage) // Storage {userSettings: '{"json":{"theme":"dark"}}', length: 1}
 ```
 
 #### Why `sync()` is unsafe
@@ -297,9 +326,7 @@ if (
   typeof result === 'object' &&
   'theme' in result &&
   'language' in result &&
-  (result.theme === 'system' ||
-    result.theme === 'light' ||
-    result.theme === 'dark') &&
+  (result.theme === 'system' || result.theme === 'light' || result.theme === 'dark') &&
   typeof result.language === 'string'
 ) {
   // 'result' is of type 'T'

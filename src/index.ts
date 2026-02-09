@@ -1,3 +1,5 @@
+import superjson from 'superjson'
+
 // Injected by Rollup
 declare const __VERSION__: string
 
@@ -12,6 +14,8 @@ class HyperStorage<T> {
   /** Version of the library, injected via Rollup replace plugin. */
   static readonly version: string = __VERSION__
 
+  static readonly superjson = superjson
+
   /** Key name under which the data is stored. */
   readonly itemName: string
 
@@ -19,10 +23,10 @@ class HyperStorage<T> {
   private readonly defaultValue: T
 
   /** Function to encode values before storing. */
-  private readonly encodeFn: (value: string) => string
+  private readonly encodeFn: (value: T) => string
 
   /** Function to decode values when reading. */
-  private readonly decodeFn: (value: string) => string
+  private readonly decodeFn: (value: string) => T
 
   /** The underlying storage backend (defaults to `window.localStorage`). */
   readonly storage: Storage
@@ -36,7 +40,7 @@ class HyperStorage<T> {
    * @param {string} itemName - The key name under which the data will be stored.
    * @param {T} [defaultValue] - Default value assigned to the key if it does not exist yet.
    * @param {Object} [options={}] - Optional configuration parameters.
-   * @param {(value: string) => string} [options.encodeFn] - Optional function to encode stored values.
+   * @param {(value: T) => string} [options.encodeFn] - Optional function to encode stored values.
    * @param {(value: string) => string} [options.decodeFn] - Optional function to decode stored values.
    * @param {Storage} [options.storage=window.localStorage] - Optional custom storage backend.
    *
@@ -48,28 +52,24 @@ class HyperStorage<T> {
     itemName: string,
     defaultValue: T,
     options: {
-      encodeFn?: (value: string) => string
-      decodeFn?: (value: string) => string
+      encodeFn?: (value: T) => string
+      decodeFn?: (value: string) => T
       storage?: Storage
     } = {}
   ) {
     const { encodeFn, decodeFn, storage = window.localStorage } = options
 
-    if (typeof itemName !== 'string')
-      throw new TypeError('itemName is not a string')
+    if (typeof itemName !== 'string') throw new TypeError('itemName is not a string')
     this.itemName = itemName
     this.defaultValue = defaultValue
 
-    if (encodeFn && typeof encodeFn !== 'function')
-      throw new TypeError('encodeFn is defined but is not a function')
-    this.encodeFn = encodeFn || ((v) => v)
+    if (encodeFn && typeof encodeFn !== 'function') throw new TypeError('encodeFn is defined but is not a function')
+    this.encodeFn = encodeFn || ((v) => HyperStorage.superjson.stringify(v))
 
-    if (decodeFn && typeof decodeFn !== 'function')
-      throw new TypeError('decodeFn is defined but is not a function')
-    this.decodeFn = decodeFn || ((v) => v)
+    if (decodeFn && typeof decodeFn !== 'function') throw new TypeError('decodeFn is defined but is not a function')
+    this.decodeFn = decodeFn || ((v) => HyperStorage.superjson.parse<T>(v))
 
-    if (!(storage instanceof Storage))
-      throw new TypeError('storage must be an instance of Storage')
+    if (!(storage instanceof Storage)) throw new TypeError('storage must be an instance of Storage')
     this.storage = storage
 
     this.sync()
@@ -83,24 +83,7 @@ class HyperStorage<T> {
     // Cache real value
     this.#value = value
 
-    // Store stringified value with prefix to distinguish from raw strings
-    let stringValue: string
-
-    if (typeof value === 'string') {
-      if (value[0] === '\0') stringValue = '\0' + value
-      else stringValue = value
-    } else if (
-      value === undefined ||
-      (typeof value === 'number' &&
-        (isNaN(value) || value === Infinity || value === -Infinity))
-    ) {
-      // Manually stringify non-JSON values
-      stringValue = '\0' + String(value)
-    } else {
-      stringValue = '\0' + JSON.stringify(value)
-    }
-
-    this.storage.setItem(this.itemName, this.encodeFn(stringValue))
+    this.storage.setItem(this.itemName, this.encodeFn(value))
   }
 
   /**
@@ -113,8 +96,13 @@ class HyperStorage<T> {
   /**
    * Allows using the setter with a callback.
    */
-  set(callback: (value: T) => T): T {
-    return (this.value = callback(this.value))
+  set<K extends keyof T>(key: K, value: T[K]): T
+  set(callback: (value: T) => T): T
+  set(keyOrCallback: keyof T | ((value: T) => T), value?: T[keyof T]): T {
+    if (typeof keyOrCallback === 'function') return (this.value = keyOrCallback(this.value))
+
+    this.value[keyOrCallback] = value!
+    return this.value
   }
 
   /**
@@ -124,34 +112,19 @@ class HyperStorage<T> {
    * Using this function should be avoided when possible and is not type safe.
    */
   sync(decodeFn = this.decodeFn): unknown {
-    let value = this.storage.getItem(this.itemName)
+    let json = this.storage.getItem(this.itemName)
 
     // Reset value to defaultValue if it does not exist in storage
-    if (typeof value !== 'string') return this.reset()
+    if (typeof json !== 'string') return this.reset()
 
     // Reset value to defaultValue if the incoming value is not properly encoded
     try {
-      value = decodeFn(value)
+      return (this.value = decodeFn(json))
     } catch (err) {
       this.reset()
       console.error(err)
       return err
     }
-
-    if (value[0] !== '\0') return (this.value = value as T) // Raw string value
-
-    // Slice off '\0' prefix
-    value = value.slice(1)
-
-    if (value[0] === '\0') return (this.value = value as T) // Raw string value that started with '\0'
-
-    // Parse non JSON
-    if (value === 'undefined') return (this.value = undefined as any)
-    if (value === 'NaN') return (this.value = NaN as any)
-    if (value === 'Infinity') return (this.value = Infinity as any)
-    if (value === '-Infinity') return (this.value = -Infinity as any)
-
-    return (this.value = JSON.parse(value) as any)
   }
 
   /**
