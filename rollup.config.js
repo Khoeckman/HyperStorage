@@ -10,7 +10,7 @@ export default {
     {
       file: 'dist/index.umd.js',
       format: 'umd',
-      name: 'StorageManager',
+      name: 'HyperStorage',
       plugins: [
         terser({
           format: {
