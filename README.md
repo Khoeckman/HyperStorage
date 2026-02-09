@@ -39,7 +39,7 @@ yarn add hyperstorage-js
 ## Constructor Syntax
 
 ```ts
-class StorageManager<T> {
+class HyperStorage<T> {
   constructor(
     itemName: string,
     defaultValue: T,
@@ -67,7 +67,7 @@ const userStore = new HyperStorage('userSettings', defaultValue)
 // If 'userSettings' is not present in the Storage, the defaultValue is set:
 console.log(userStore.value) // { theme: 'light', language: 'en' }
 
-// Change theme to dark:
+// Change theme to dark
 userStore.value = { theme: 'dark', language: 'en' }
 // or
 userStore.set((v) => (v.theme = 'dark'))
@@ -75,7 +75,7 @@ userStore.set((v) => (v.theme = 'dark'))
 console.log(userStore.value) // { theme: 'dark', language: 'en' }
 console.log(userStore.value.theme) // 'dark'
 
-// Present in localStorage:
+// Present in localStorage
 console.log(userStore.storage) // Storage {userSettings: '\x00{"theme":"dark","language":"en"}', length: 1}
 ```
 
@@ -168,14 +168,19 @@ userStore.value = { theme: 'dark' }
 Safe usage of `sync()` requires explicit runtime validation before accessing any properties. It quickly becomes clear how type-unsafe `sync()` is and why it should be avoided.
 
 ```ts
-const current = userStore.sync() // (method): unknown
+const result = userStore.sync() // (method): unknown
+// Right now, 'result' equals 'userStore.value' exactly
 
-// 'current' is of type 'unknown'. ts(18046)
-console.log(current.theme) // { theme: 'dark' }
+// 'result' is of type 'unknown'. ts(18046)
+console.log(result.theme) // 'dark'
 
-// Must narrow down
-if (current && typeof current === 'object' && 'theme' in current) {
-  console.log(current.theme)
+// No error, but unsafe
+console.log(userStore.value.theme) // 'dark'
+
+// Must narrow down to be safe
+if (result && typeof result === 'object' && 'theme' in result) {
+  // No error, safe
+  console.log(result.theme) // 'dark'
 }
 ```
 
@@ -252,6 +257,59 @@ userStore.sync((value) => JSON.parse(value))
 
 console.log(userStore.value) // { theme: 'dark' }
 console.log(userStore.storage) // Storage {userSettings: '\x00{"theme":"dark"}', length: 1}
+```
+
+#### Why `sync()` is unsafe
+
+1. The item in `Storage` is undecodable by the `decodeFn` passed to `sync()`.
+
+```js
+localStorage.setItem('userSettings', 'not an object')
+
+// SyntaxError: Unexpected token 'o', "not an object" is not valid JSON
+const result = userStore.sync((value) => JSON.parse(value))
+// Execution continues because sync() uses a try-catch
+
+console.log(result) // instance of SyntaxError
+
+// Reset to default value
+console.log(userStore.value) // {theme: 'system', language: 'en'}
+```
+
+2. The item in `Storage`, after being decoded, is not of type `T`.
+
+```js
+localStorage.setItem('userSettings', '{"not":"valid"}')
+
+const result = userStore.sync((value) => JSON.parse(value))
+console.log(result) // {not: 'valid'}
+console.log(userStore.value) // {not: 'valid'}
+```
+
+No errors, but `result` and `userStore.value` are both not of type `T`.
+
+This **must** be manually checked and `userStore.reset()` should be called if the check fails.
+
+```js
+// This example is specifically for type 'Settings'
+if (
+  result &&
+  typeof result === 'object' &&
+  'theme' in result &&
+  'language' in result &&
+  (result.theme === 'system' ||
+    result.theme === 'light' ||
+    result.theme === 'dark') &&
+  typeof result.language === 'string'
+) {
+  // 'result' is of type 'T'
+} else {
+  // 'result' is not of type 'T'
+  userStore.reset()
+  console.log(userStore.value) // {theme: 'system', language: 'en'}
+}
+
+// 'userStore.value' is of type 'T'
 ```
 
 <br>

@@ -1,6 +1,6 @@
 {
   "name": "hyperstorage-js",
-  "version": "5.0.7",
+  "version": "5.1.0",
   "description": "A lightweight wrapper for localStorage/sessionStorage with efficient caching and type-preserving serialization.",
   "license": "MIT",
   "author": "Khoeckman",

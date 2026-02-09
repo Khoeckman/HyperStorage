@@ -133,8 +133,9 @@ class HyperStorage<T> {
     try {
       value = decodeFn(value)
     } catch (err) {
+      this.reset()
       console.error(err)
-      return this.reset()
+      return err
     }
 
     if (value[0] !== '\0') return (this.value = value as T) // Raw string value
