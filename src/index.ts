@@ -130,7 +130,6 @@ class HyperStorage<T> {
 
   /**
    * Resets the stored value to its configured default.
-   *
    * Updates both the underlying storage and the internal cache.
    */
   reset(): T {
@@ -138,29 +137,7 @@ class HyperStorage<T> {
   }
 
   /**
-   * Removes this specific key and its value from storage.
-   *
-   * Also clears the internal cache to prevent stale data access.
-   */
-  remove(): void {
-    this.#value = this.defaultValue
-    this.storage.removeItem(this.itemName)
-  }
-
-  /**
-   * Clears **all** data fromstorage.
-   *
-   * This affects every key in the storage.
-   * Also clears the internal cache to prevent stale data access.
-   */
-  clear(): void {
-    this.#value = this.defaultValue
-    this.storage.clear()
-  }
-
-  /**
    * Checks whether the current cached value matches the configured default value.
-   *
    * Uses reference comparison for objects and strict equality for primitives.
    */
   isDefault(): boolean {

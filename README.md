@@ -102,7 +102,7 @@ console.log(userStore.storage) // Storage {userSettings: '{"json":{"theme":"dar
 ### Advanced Ways to Assign a New Value
 
 ```js
-// Using setter
+// Overwrite entirely
 userStore.value = { theme: 'dark', language: 'en' }
 
 // Change single property using the setter
@@ -159,16 +159,6 @@ decodeFn = (value) => HyperStorage.superjson.parse<T>(value)
 sessionStore.reset()
 console.log(sessionStore.defaultValue) // 'none'
 console.log(sessionStore.value) // 'none'
-```
-
-### Removing Values
-
-Internally uses `Storage.removeItem()` to remove the item from storage and sets the cached value to `undefined`.
-
-```js
-sessionStore.remove()
-console.log(sessionStore.value) // 'none'
-console.log(sessionStore.storage) // Storage {length: 0}
 ```
 
 <br>
@@ -243,18 +233,6 @@ if (result && typeof result === 'object' && 'theme' in result) {
 - Updates both `Storage` and internal cache.
 - Returns the restored default value.
 
-### `remove(): void`
-
-- Removes the key and its value from `Storage`.
-- Sets the internal cache to `undefined`.
-- Returns nothing.
-
-### `clear(): void`
-
-- Clears **all keys** in `Storage`.
-- Affects all stored data, not just this key.
-- Returns nothing.
-
 ### `isDefault(): boolean`
 
 - Checks whether the cached value equals the configured default.
@@ -275,7 +253,9 @@ If the underlying `Storage` is not modified through the value setter, the intern
 - Reads the value from storage.
 - Decodes it using `decodeFn`.
 - Updates the internal cache.
-- Returns the synchronized value. The return type is `unknown` because data read from `Storage` cannot be type-checked or trusted at compile time, especially when it may have been modified externally.
+- Returns the synchronized value.
+
+The return type is `unknown` because data read from `Storage` cannot be type-checked or trusted at compile time because it may have been modified externally.
 
 ```js
 // External change to storage (to be avoided)
