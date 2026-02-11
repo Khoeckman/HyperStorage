@@ -94,7 +94,7 @@ class HyperStorage<T> {
   }
 
   /**
-   * Allows using the setter with a callback.
+   * Allows using the setter with property assignment or a callback.
    */
   set<K extends keyof T>(key: K, value: T[K]): T
   set(callback: (value: T) => T): T
