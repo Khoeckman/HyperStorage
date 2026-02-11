@@ -32,7 +32,7 @@ class HyperStorage<T> {
   readonly storage: Storage
 
   /** Internal cached value to improve access speed. */
-  #value?: T
+  #value!: T
 
   /**
    * Creates a new HyperStorage instance.
@@ -61,6 +61,7 @@ class HyperStorage<T> {
 
     if (typeof itemName !== 'string') throw new TypeError('itemName is not a string')
     this.itemName = itemName
+
     this.defaultValue = defaultValue
 
     if (encodeFn && typeof encodeFn !== 'function') throw new TypeError('encodeFn is defined but is not a function')
@@ -80,9 +81,7 @@ class HyperStorage<T> {
    * Automatically caches, stringifies and encodes the value.
    */
   set value(value: T) {
-    // Cache real value
-    this.#value = value
-
+    this.#value = value // Cache real value
     this.storage.setItem(this.itemName, this.encodeFn(value))
   }
 
@@ -90,7 +89,7 @@ class HyperStorage<T> {
    * Gets the current cached value.
    */
   get value(): T {
-    return this.#value ?? this.defaultValue
+    return this.#value
   }
 
   /**
@@ -99,10 +98,10 @@ class HyperStorage<T> {
   set<K extends keyof T>(key: K, value: T[K]): T
   set(callback: (value: T) => T): T
   set(keyOrCallback: keyof T | ((value: T) => T), value?: T[keyof T]): T {
-    if (typeof keyOrCallback === 'function') return (this.value = keyOrCallback(this.value))
+    if (typeof keyOrCallback === 'function') return (this.value = keyOrCallback(this.#value))
 
     return (this.value = {
-      ...this.value,
+      ...this.#value,
       [keyOrCallback]: value,
     })
   }
@@ -123,8 +122,8 @@ class HyperStorage<T> {
     try {
       return (this.value = decodeFn(json))
     } catch (err) {
-      this.reset()
       console.error(err)
+      this.reset()
       return err
     }
   }
@@ -144,7 +143,7 @@ class HyperStorage<T> {
    * Also clears the internal cache to prevent stale data access.
    */
   remove(): void {
-    this.#value = undefined
+    this.#value = this.defaultValue
     this.storage.removeItem(this.itemName)
   }
 
@@ -155,7 +154,7 @@ class HyperStorage<T> {
    * Also clears the internal cache to prevent stale data access.
    */
   clear(): void {
-    this.#value = undefined
+    this.#value = this.defaultValue
     this.storage.clear()
   }
 
