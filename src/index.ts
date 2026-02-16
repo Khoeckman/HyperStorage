@@ -12,24 +12,24 @@ declare const __VERSION__: string
  */
 class HyperStorage<T> {
   /** Version of the library, injected via Rollup replace plugin. */
-  static readonly version: string = __VERSION__
+  public static readonly version: string = __VERSION__
 
-  static readonly superjson = superjson
+  public static readonly superjson = superjson
 
   /** Key name under which the data is stored. */
-  readonly itemName: string
+  public readonly itemName: string
 
   /** Default value used when the key does not exist in storage. */
-  private readonly defaultValue: T
+  public readonly defaultValue: T
 
   /** Function to encode values before storing. */
-  private readonly encodeFn: (value: T) => string
+  readonly #encodeFn: (value: T) => string
 
   /** Function to decode values when reading. */
-  private readonly decodeFn: (value: string) => T
+  readonly #decodeFn: (value: string) => T
 
   /** The underlying storage backend (defaults to `window.localStorage`). */
-  readonly storage: Storage
+  public readonly storage: Storage
 
   /** Internal cached value to improve access speed. */
   #value!: T
@@ -65,10 +65,10 @@ class HyperStorage<T> {
     this.defaultValue = defaultValue
 
     if (encodeFn && typeof encodeFn !== 'function') throw new TypeError('encodeFn is defined but is not a function')
-    this.encodeFn = encodeFn || ((v) => HyperStorage.superjson.stringify(v))
+    this.#encodeFn = encodeFn || ((v) => HyperStorage.superjson.stringify(v))
 
     if (decodeFn && typeof decodeFn !== 'function') throw new TypeError('decodeFn is defined but is not a function')
-    this.decodeFn = decodeFn || ((v) => HyperStorage.superjson.parse<T>(v))
+    this.#decodeFn = decodeFn || ((v) => HyperStorage.superjson.parse<T>(v))
 
     if (!(storage instanceof Storage)) throw new TypeError('storage must be an instance of Storage')
     this.storage = storage
@@ -82,7 +82,7 @@ class HyperStorage<T> {
    */
   set value(value: T) {
     this.#value = value // Cache real value
-    this.storage.setItem(this.itemName, this.encodeFn(value))
+    this.storage.setItem(this.itemName, this.#encodeFn(value))
   }
 
   /**
@@ -112,7 +112,7 @@ class HyperStorage<T> {
    * This is only necessary if the stored value may have been modified externally.
    * Using this function should be avoided when possible and is not type safe.
    */
-  sync(decodeFn = this.decodeFn): unknown {
+  sync(decodeFn = this.#decodeFn): unknown {
     let json = this.storage.getItem(this.itemName)
 
     // Reset value to defaultValue if it does not exist in storage
