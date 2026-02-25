@@ -68,7 +68,7 @@ class HyperStorage<T> {
     this.#encodeFn = encodeFn || ((v) => HyperStorage.superjson.stringify(v))
 
     if (decodeFn && typeof decodeFn !== 'function') throw new TypeError('decodeFn is defined but is not a function')
-    this.#decodeFn = decodeFn || ((v) => HyperStorage.superjson.parse<T>(v))
+    this.#decodeFn = decodeFn || ((v) => HyperStorage.superjson.parse(v))
 
     if (!(storage instanceof Storage)) throw new TypeError('storage must be an instance of Storage')
     this.storage = storage
@@ -113,15 +113,15 @@ class HyperStorage<T> {
    * Using this function should be avoided when possible and is not type safe.
    */
   sync(decodeFn = this.#decodeFn): unknown {
-    let json = this.storage.getItem(this.itemName)
+    const json = this.storage.getItem(this.itemName)
 
     // Reset value to defaultValue if it does not exist in storage
-    if (typeof json !== 'string') return this.reset()
+    if (json === null) return this.reset()
 
-    // Reset value to defaultValue if the incoming value is not properly encoded
     try {
       return (this.value = decodeFn(json))
     } catch (err) {
+      // Reset value to defaultValue if the incoming value is not properly encoded
       console.error(err)
       this.reset()
       return err

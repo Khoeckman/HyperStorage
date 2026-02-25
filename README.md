@@ -20,25 +20,6 @@ The biggest burdens of working with the **Storage API** is verifying values on e
 - 🛠️ **Utility helpers**: use `.set()` and `.isDefault()` to simplify storage operations.
 - 🌐 **Custom storage**: works with any object implementing the standard Storage API. (`localStorage`, `sessionStorage`, ...)
 
-### Supported Types
-
-| Type      | Supported by Storage API | Supported by HyperStorage (trough superjson) |
-| --------- | ------------------------ | -------------------------------------------- |
-| string    | ✅                       | ✅                                           |
-| number    | ❌                       | ✅                                           |
-| boolean   | ❌                       | ✅                                           |
-| null      | ❌                       | ✅                                           |
-| Array     | ❌                       | ✅                                           |
-| Object    | ❌                       | ✅                                           |
-| undefined | ❌                       | ✅                                           |
-| bigint    | ❌                       | ✅                                           |
-| Date      | ❌                       | ✅                                           |
-| RegExp    | ❌                       | ✅                                           |
-| Set       | ❌                       | ✅                                           |
-| Map       | ❌                       | ✅                                           |
-| Error     | ❌                       | ✅                                           |
-| URL       | ❌                       | ✅                                           |
-
 <br>
 
 ## Installation
@@ -202,6 +183,27 @@ if (result && typeof result === 'object' && 'theme' in result) {
   console.log(result.theme) // 'dark'
 }
 ```
+
+<br>
+
+## Supported Types in Storage
+
+| Type      | Supported by Storage API | Supported by HyperStorage (trough superjson) |
+| --------- | ------------------------ | -------------------------------------------- |
+| string    | ✅                       | ✅                                           |
+| undefined | ❌                       | ✅                                           |
+| null      | ❌                       | ✅                                           |
+| boolean   | ❌                       | ✅                                           |
+| number    | ❌                       | ✅                                           |
+| bigint    | ❌                       | ✅                                           |
+| Object    | ❌                       | ✅                                           |
+| Array     | ❌                       | ✅                                           |
+| Set       | ❌                       | ✅                                           |
+| Map       | ❌                       | ✅                                           |
+| URL       | ❌                       | ✅                                           |
+| Date      | ❌                       | ✅                                           |
+| RegExp    | ❌                       | ✅                                           |
+| Error     | ❌                       | ✅                                           |
 
 <br>
 
