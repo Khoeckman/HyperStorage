@@ -80,7 +80,7 @@ console.log(userStore.value.theme) // 'dark'
 console.log(userStore.storage) // Storage {userSettings: '{"json":{"theme":"dark","language":"en"}}', length: 1}
 ```
 
-### Advanced Ways to Assign a New Value
+### Different Ways to Assign a New Value
 
 ```js
 // Overwrite entirely
