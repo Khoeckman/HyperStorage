@@ -78,9 +78,11 @@
 
         // Increment the number and save it to storage when the button is clicked
         buttonEl.addEventListener('click', () => {
-            demoStore.set((v) => ++v)
+            demoStore.value++
             numberEl.textContent = '' + demoStore.value
         })
+
+        console.debug(demoStore);
     </script>
 </body>
 

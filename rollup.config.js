@@ -14,7 +14,14 @@ export default {
       format: 'umd',
       name: 'HyperStorage',
       globals: { superjson: 'superjson' },
-      plugins: [terser({ format: { comments: false } })],
+      plugins: [
+        terser({
+          keep_classnames: true,
+          format: {
+            comments: false,
+          },
+        }),
+      ],
     },
     { file: 'dist/index.mjs', format: 'es' },
     { file: 'dist/index.cjs', format: 'cjs' },

@@ -1,12 +1,30 @@
 # HyperStorage: Storage Manager for JavaScript/TypeScript
 
+[![npm version](https://img.shields.io/npm/v/hyperstorage-js.svg)](https://www.npmjs.com/package/hyperstorage-js)
+[![npm downloads](https://img.shields.io/npm/dt/hyperstorage-js.svg)](https://www.npmjs.com/package/hyperstorage-js)
+[![jsDelivr](https://data.jsdelivr.com/v1/package/npm/hyperstorage-js/badge)](https://www.jsdelivr.com/package/npm/hyperstorage-js)
+
+## Description
+
 A lightweight wrapper for Storage interfaces (e.g., `localStorage` or `sessionStorage`) with **efficient caching** and **type-preserving serialization**.
 
 The biggest burdens of working with the **Storage API** is verifying values on every read, providing proper default values and only being able to store strings, having to `JSON.stringify()` and `JSON.parse()` manually everytime. This package eliminates this all by providing a safe, automatic and efficient wrapper that handles everything for you. You can read/store numbers and objects without any extra steps, lose no performance and improve code readability.
 
-[![npm version](https://img.shields.io/npm/v/hyperstorage-js.svg)](https://www.npmjs.com/package/hyperstorage-js)
-[![npm downloads](https://img.shields.io/npm/dt/hyperstorage-js.svg)](https://www.npmjs.com/package/hyperstorage-js)
-[![jsDelivr](https://data.jsdelivr.com/v1/package/npm/hyperstorage-js/badge)](https://www.jsdelivr.com/package/npm/hyperstorage-js)
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Constructor Syntax](#constructor-syntax)
+- [Usage](#usage)
+  - [Putting a New Value in Storage](#putting-a-new-value-in-storage)
+  - [Using Another Storage API](#using-another-storage-api)
+  - [Using Encoding and Decoding Functions](#using-encoding-and-decoding-functions)
+  - [Reset to Default](#reset-to-default)
+- [TypeScript Usage](#typescript-usage)
+  - [Using Type Parameter `T` in `HyperStorage<T>`](#using-type-parameter-t-in-hyperstoraget)
+  - [Using `sync()`](#using-sync)
+- [Supported Types In Storage](#supported-types-in-storage)
+- [Class Reference](#class-reference)
 
 <br>
 
@@ -31,8 +49,8 @@ npm install hyperstorage-js
 # pnpm
 pnpm add hyperstorage-js
 
-# yarn
-yarn add hyperstorage-js
+# bun
+bun i hyperstorage-js
 ```
 
 <br>
@@ -63,38 +81,59 @@ import HyperStorage from 'hyperstorage-js'
 
 ```js
 const defaultValue = { theme: 'light', language: 'en' }
-const userStore = new HyperStorage('userSettings', defaultValue)
+const settingsStore = new HyperStorage('settings', defaultValue)
 
-// If 'userSettings' is not present in the Storage, the defaultValue is set:
-console.log(userStore.value) // { theme: 'light', language: 'en' }
+// If 'settings' is not present in localStorage, the defaultValue is set
+console.log(settingsStore.value) // { theme: 'light', language: 'en' }
 
-// Change theme to dark
-userStore.value = { theme: 'dark', language: 'en' }
-// or
-userStore.set('theme', 'dark')
+// Change theme to dark (one of multiple ways)
+settingsStore.set('theme', 'dark')
 
-console.log(userStore.value) // { theme: 'dark', language: 'en' }
-console.log(userStore.value.theme) // 'dark'
-
-// Present in localStorage
-console.log(userStore.storage) // Storage {userSettings: '{"json":{"theme":"dark","language":"en"}}', length: 1}
+console.log(settingsStore.value) // { theme: 'dark', language: 'en' }
+console.log(window.localStorage) // Storage {userSettings: '{"json":{"theme":"dark","language":"en"}}', length: 1}
 ```
 
-### Different Ways to Assign a New Value
+### Putting a New Value in Storage
+
+The default method that works for all use cases is the `value` setter.
 
 ```js
-// Overwrite entirely
-userStore.value = { theme: 'dark', language: 'en' }
-
-// Change single property using the setter
-userStore.value = { ...userStore.value, theme: 'dark' }
-
-// Change single property using a callback
-userStore.set((v) => (v.theme = 'dark'))
-
-// Change single property using a property setter
-userStore.set('theme', 'dark')
+store.value = 'anything'
 ```
+
+The [`set()` (click)](#setkeyorcallback-keyof-t--value-t--t-value-tkeyof-t-t) method is a handy wrapper for assigning and can be used as shown in the examples below, which are sorted from best to worst practice.
+
+<details>
+<summary><strong>Object: Change Only One Property</strong></summary>
+
+```js
+// Property setter
+settingsStore.set('theme', 'dark')
+
+// Callback setter
+settingsStore.set((v) => (v.theme = 'dark'))
+
+// Spread operator
+settingsStore.value = { ...settingsStore.value, theme: 'dark' }
+```
+
+</details>
+
+<details>
+<summary><strong>Number: Increment</strong></summary>
+
+```js
+// Increment operator
+numberStore.value += 2
+
+// Callback setter
+numberStore.set((v) => (v += 2))
+
+// Assign new value
+numberStore.value = numberStore.value + 2
+```
+
+</details>
 
 ### Using Another Storage API
 
@@ -112,7 +151,17 @@ console.log(sessionStore.storage) // Storage {sessionData: '{"json":"temporary"}
 
 ### Using Encoding and Decoding Functions
 
-If you want to make stored data significantly harder to reverse-engineer, use the `encodeFn` and `decodeFn` options.
+If you want to make stored data harder to reverse-engineer, use the `encodeFn` and `decodeFn` options.
+
+The default values for `encodeFn` and `decodeFn` are:
+
+```ts
+encodeFn = (value) => HyperStorage.superjson.stringify(value)
+decodeFn = (value) => HyperStorage.superjson.parse(value)
+```
+
+<details>
+<summary><strong>Base64 Example</strong></summary>
 
 Apply Base64 encoding using JavaScript's `btoa` (String to Base64) and `atob` (Base64 to String).
 
@@ -127,18 +176,15 @@ console.log(sessionStore.value) // 'temporary'
 console.log(sessionStore.storage) // Storage  {sessionData: 'dGVtcG9yYXJ5', length: 1}
 ```
 
-The default values for `encodeFn` and `decodeFn` are:
+</details>
 
-```ts
-encodeFn = (value) => HyperStorage.superjson.stringify(value)
-decodeFn = (value) => HyperStorage.superjson.parse<T>(value)
-```
-
-### Resetting Values
+### Reset to Default
 
 ```js
-sessionStore.reset()
+console.log(sessionStore.value) // 'temporary'
 console.log(sessionStore.defaultValue) // 'none'
+
+sessionStore.reset()
 console.log(sessionStore.value) // 'none'
 ```
 
@@ -146,7 +192,7 @@ console.log(sessionStore.value) // 'none'
 
 ## TypeScript Usage
 
-### Using Type Parameter `T`
+### Using Type Parameter `T` in `HyperStorage<T>`
 
 ```ts
 interface Settings {
@@ -207,7 +253,7 @@ if (result && typeof result === 'object' && 'theme' in result) {
 
 <br>
 
-## API
+## Class Reference
 
 ### `constructor<T>(itemName: string, defaultValue: T, options = {})`
 
@@ -270,7 +316,10 @@ console.log(userStore.value) // { theme: 'dark' }
 console.log(userStore.storage) // Storage {userSettings: '{"json":{"theme":"dark"}}', length: 1}
 ```
 
-#### Why `sync()` is unsafe
+<br>
+
+<details>
+<summary><strong> Why <code>sync()</code> is unsafe</strong></summary>
 
 1. The item in `Storage` is undecodable by the `decodeFn` passed to `sync()`.
 
@@ -320,6 +369,8 @@ if (
 
 // 'userStore.value' is of type 'T'
 ```
+
+</details>
 
 <br>
 
