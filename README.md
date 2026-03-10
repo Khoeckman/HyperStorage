@@ -44,7 +44,7 @@ The biggest burdens of working with the **Storage API** is verifying values on e
 
 ```bash
 # npm
-npm install hyperstorage-js
+npm i hyperstorage-js
 
 # pnpm
 pnpm add hyperstorage-js
@@ -101,10 +101,10 @@ The default method that works for all use cases is the `value` setter.
 store.value = 'anything'
 ```
 
-The [`set()` (click)](#setkeyorcallback-keyof-t--value-t--t-value-tkeyof-t-t) method is a handy wrapper for assigning and can be used as shown in the examples below, which are sorted from best to worst practice.
+The [`set()`](#setkeyorcallback-keyof-t--value-t--t-value-tkeyof-t-t) method is a handy wrapper for assigning and can be used as shown in the examples below, which are sorted from best to worst practice.
 
 <details>
-<summary><strong>Object: Change Only One Property</strong></summary>
+<summary><strong>Object: Change Single Property</strong></summary>
 
 ```js
 // Property setter
@@ -140,18 +140,18 @@ numberStore.value = numberStore.value + 2
 Use `sessionStorage` to only remember data for the duration of a session.
 
 ```js
-const sessionStore = new HyperStorage('sessionData', 'none', {
+const sessionStore = new HyperStorage('session', 'none', {
   storage: window.sessionStorage,
 })
 
 sessionStore.value = 'temporary'
 console.log(sessionStore.value) // 'temporary'
-console.log(sessionStore.storage) // Storage {sessionData: '{"json":"temporary"}', length: 1}
+console.log(sessionStore.storage) // Storage {session: '{"json":"temporary"}', length: 1}
 ```
 
-### Using Encoding and Decoding Functions
+### Using the Encoding and Decoding Functions
 
-If you want to make stored data harder to reverse-engineer, use the `encodeFn` and `decodeFn` options.
+If you want to make stored data harder to reverse-engineer or change the parser, use the `encodeFn` and `decodeFn` options.
 
 The default values for `encodeFn` and `decodeFn` are:
 
@@ -163,17 +163,17 @@ decodeFn = (value) => HyperStorage.superjson.parse(value)
 <details>
 <summary><strong>Base64 Example</strong></summary>
 
-Apply Base64 encoding using JavaScript's `btoa` (String to Base64) and `atob` (Base64 to String).
+Apply Base64 encoding on top of superjson using JavaScript's `btoa` (String to Base64) and `atob` (Base64 to String) functions.
 
 ```js
-const sessionStore = new HyperStorage('sessionData', 'none', {
-  encodeFn: (value) => btoa(value),
-  decodeFn: (value) => atob(value),
+const sessionStore = new HyperStorage('session', 'none', {
+  encodeFn: (value) => btoa(HyperStorage.superjson.stringify(value)),
+  decodeFn: (value) => HyperStorage.superjson.parse(atob(value)),
 })
 
 sessionStore.value = 'temporary'
 console.log(sessionStore.value) // 'temporary'
-console.log(sessionStore.storage) // Storage  {sessionData: 'dGVtcG9yYXJ5', length: 1}
+console.log(sessionStore.storage) // Storage  {session: 'eyJqc29uIjoidGVtcG9yYXJ5In0=', length: 1}
 ```
 
 </details>
@@ -201,10 +201,10 @@ interface Settings {
 }
 
 const defaultValue: Settings = { theme: 'system', language: 'en' }
-const userStore = new HyperStorage<Settings>('userSettings', defaultValue)
+const settingsStore = new HyperStorage<Settings>('userSettings', defaultValue)
 
 // Property 'language' is missing in type '{ theme: "dark"; }' but required in type 'Settings'. ts(2741)
-userStore.value = { theme: 'dark' }
+settingsStore.value = { theme: 'dark' }
 ```
 
 ### Using `sync()`
@@ -214,14 +214,14 @@ Safe usage of `sync()` requires explicit runtime validation before accessing any
 ```ts
 // ... continues from the above example
 
-const result = userStore.sync() // (method): unknown
-// Right now, 'result' equals 'userStore.value' exactly
+const result = settingsStore.sync() // (method): unknown
+// Right now, 'result' equals 'settingsStore.value' exactly
 
 // 'result' is of type 'unknown'. ts(18046)
 console.log(result.theme) // 'dark'
 
 // No error, but unsafe
-console.log(userStore.value.theme) // 'dark'
+console.log(settingsStore.value.theme) // 'dark'
 
 // Must narrow down to be safe
 if (result && typeof result === 'object' && 'theme' in result) {
@@ -288,7 +288,7 @@ if (result && typeof result === 'object' && 'theme' in result) {
 - Returns `true` if the current value matches the default, otherwise `false`.
 
 ```js
-if (userStore.isDefault()) {
+if (settingsStore.isDefault()) {
   console.log('value equals the default value.')
 }
 ```
@@ -307,13 +307,13 @@ The return type is `unknown` because data read from `Storage` cannot be type-che
 
 ```js
 // External change to storage (to be avoided)
-localStorage.setItem('userSettings', '{"theme":"dark"}')
+localStorage.setItem('settings', '{"theme":"dark"}')
 
 // Resynchronize the cache, optionally with a custom decoder
-userStore.sync((value) => JSON.parse(value))
+settingsStore.sync((value) => JSON.parse(value))
 
-console.log(userStore.value) // { theme: 'dark' }
-console.log(userStore.storage) // Storage {userSettings: '{"json":{"theme":"dark"}}', length: 1}
+console.log(settingsStore.value) // { theme: 'dark' }
+console.log(settingsStore.storage) // Storage {settings: '{"json":{"theme":"dark"}}', length: 1}
 ```
 
 <br>
@@ -324,31 +324,31 @@ console.log(userStore.storage) // Storage {userSettings: '{"json":{"theme":"dark
 1. The item in `Storage` is undecodable by the `decodeFn` passed to `sync()`.
 
 ```js
-localStorage.setItem('userSettings', 'not an object')
+localStorage.setItem('settings', 'not an object')
 
 // SyntaxError: Unexpected token 'o', "not an object" is not valid JSON
-const result = userStore.sync((value) => JSON.parse(value))
+const result = settingsStore.sync((value) => JSON.parse(value))
 // Execution continues because sync() uses a try-catch
 
 console.log(result) // instance of SyntaxError
 
 // Reset to default value
-console.log(userStore.value) // {theme: 'system', language: 'en'}
+console.log(settingsStore.value) // {theme: 'system', language: 'en'}
 ```
 
 2. The item in `Storage`, after being decoded, is not of type `T`.
 
 ```js
-localStorage.setItem('userSettings', '{"not":"valid"}')
+localStorage.setItem('settings', '{"not":"valid"}')
 
-const result = userStore.sync((value) => JSON.parse(value))
+const result = settingsStore.sync((value) => JSON.parse(value))
 console.log(result) // {not: 'valid'}
-console.log(userStore.value) // {not: 'valid'}
+console.log(settingsStore.value) // {not: 'valid'}
 ```
 
-No errors, but `result` and `userStore.value` are both not of type `T`.
+No errors, but `result` and `settingsStore.value` are both not of type `T`.
 
-This **must** be manually checked and `userStore.reset()` should be called if the check fails.
+This **must** be manually checked and `settingsStore.reset()` should be called if the check fails.
 
 ```js
 // This example is specifically for type 'Settings'
@@ -363,11 +363,11 @@ if (
   // 'result' is of type 'T'
 } else {
   // 'result' is not of type 'T'
-  userStore.reset()
-  console.log(userStore.value) // {theme: 'system', language: 'en'}
+  settingsStore.reset()
+  console.log(settingsStore.value) // {theme: 'system', language: 'en'}
 }
 
-// 'userStore.value' is of type 'T'
+// 'settingsStore.value' is of type 'T'
 ```
 
 </details>
