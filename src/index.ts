@@ -12,15 +12,15 @@ declare const __VERSION__: string
  */
 class HyperStorage<T> {
   /** Version of the library, injected via Rollup replace plugin. */
-  public static readonly version: string = __VERSION__
+  static readonly version = __VERSION__
 
-  public static readonly superjson = superjson
+  static readonly superjson = superjson
 
   /** Key name under which the data is stored. */
-  public readonly itemName: string
+  readonly itemName: string
 
   /** Default value used when the key does not exist in storage. */
-  public readonly defaultValue: T
+  readonly defaultValue: T
 
   /** Function to encode values before storing. */
   readonly #encodeFn: (value: T) => string
@@ -29,7 +29,7 @@ class HyperStorage<T> {
   readonly #decodeFn: (value: string) => T
 
   /** The underlying storage backend (defaults to `window.localStorage`). */
-  public readonly storage: Storage
+  readonly storage: Storage
 
   /** Internal cached value to improve access speed. */
   #value!: T
@@ -107,10 +107,10 @@ class HyperStorage<T> {
   }
 
   /**
-   * Synchronizes the internal cache (`#value`) with the actual value in storage.
+   * Synchronizes the cached value of this wrapper with the value in storage.
    *
-   * This is only necessary if the stored value may have been modified externally.
-   * Using this function should be avoided when possible and is not type safe.
+   * This is only necessary if the stored value may have been modified without using the setter of this class.
+   * Using this function is not type safe.
    */
   sync(decodeFn = this.#decodeFn): unknown {
     const json = this.storage.getItem(this.itemName)
@@ -130,6 +130,7 @@ class HyperStorage<T> {
 
   /**
    * Resets the stored value to its configured default.
+   *
    * Updates both the underlying storage and the internal cache.
    */
   reset(): T {
@@ -137,7 +138,8 @@ class HyperStorage<T> {
   }
 
   /**
-   * Checks whether the current cached value matches the configured default value.
+   * Checks whether the current value matches the configured default value.
+   *
    * Uses reference comparison for objects and strict equality for primitives.
    */
   isDefault(): boolean {

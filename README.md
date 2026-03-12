@@ -6,7 +6,7 @@
 
 ## Description
 
-A lightweight wrapper for Storage interfaces (e.g., `localStorage` or `sessionStorage`) with **efficient caching** and **type-preserving serialization**.
+A lightweight wrapper for Storage APIs (e.g., `localStorage` or `sessionStorage`) with **efficient caching** and **type-preserving serialization**.
 
 The biggest burdens of working with the **Storage API** is verifying values on every read, providing proper default values and only being able to store strings, having to `JSON.stringify()` and `JSON.parse()` manually everytime. This package eliminates this all by providing a safe, automatic and efficient wrapper that handles everything for you. You can read/store numbers and objects without any extra steps, lose no performance and improve code readability.
 
@@ -234,22 +234,24 @@ if (result && typeof result === 'object' && 'theme' in result) {
 
 ## Supported Types in Storage
 
-| Type      | Supported by Storage API | Supported by HyperStorage (trough superjson) |
-| --------- | ------------------------ | -------------------------------------------- |
-| string    | ✅                       | ✅                                           |
-| undefined | ❌                       | ✅                                           |
-| null      | ❌                       | ✅                                           |
-| boolean   | ❌                       | ✅                                           |
-| number    | ❌                       | ✅                                           |
-| bigint    | ❌                       | ✅                                           |
-| Object    | ❌                       | ✅                                           |
-| Array     | ❌                       | ✅                                           |
-| Set       | ❌                       | ✅                                           |
-| Map       | ❌                       | ✅                                           |
-| URL       | ❌                       | ✅                                           |
-| Date      | ❌                       | ✅                                           |
-| RegExp    | ❌                       | ✅                                           |
-| Error     | ❌                       | ✅                                           |
+Types supported by HyperStorage is based on what superjson supports.
+
+| Type      | Supported by Storage API | Supported by HyperStorage |
+| --------- | ------------------------ | ------------------------- |
+| string    | ✅                       | ✅                        |
+| undefined | ❌                       | ✅                        |
+| null      | ❌                       | ✅                        |
+| boolean   | ❌                       | ✅                        |
+| number    | ❌                       | ✅                        |
+| bigint    | ❌                       | ✅                        |
+| Object    | ❌                       | ✅                        |
+| Array     | ❌                       | ✅                        |
+| Set       | ❌                       | ✅                        |
+| Map       | ❌                       | ✅                        |
+| URL       | ❌                       | ✅                        |
+| Date      | ❌                       | ✅                        |
+| RegExp    | ❌                       | ✅                        |
+| Error     | ❌                       | ✅                        |
 
 <br>
 
